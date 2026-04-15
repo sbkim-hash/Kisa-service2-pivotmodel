@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart 지역화폐 서비스 계획서</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Tech Button */
+        .tech-button {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+        
+        .tech-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        /* Slide Panel */
+        .slide-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 800px;
+            max-width: 90vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            box-shadow: -5px 0 30px rgba(0,0,0,0.5);
+            transition: right 0.4s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 40px;
+        }
+        
+        .slide-panel.active {
+            right: 0;
+        }
+        
+        .slide-panel-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .slide-panel-close:hover {
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
+        
+        .slide-panel-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .arch-layer {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .arch-layer-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .mermaid {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .arch-item {
+            background: rgba(255,255,255,0.08);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            color: white;
+            font-size: 14px;
+            line-height: 1.6;
+            border-left: 3px solid #667eea;
+        }
+        
+        .arch-arrow {
+            text-align: center;
+            font-size: 24px;
+            color: rgba(255,255,255,0.5);
+            margin: 10px 0;
+        }
+        
+        .contract-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .contract-card {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .contract-card:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .contract-num {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .contract-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+        }
+        
+        .contract-desc {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.4;
+        }
+        
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+        
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            padding: 40px 20px;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        
+        /* ===== 모바일 반응형 ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+            
+            .container {
+                padding: 25px 15px !important;
+                border-radius: 12px !important;
+            }
+            
+            h1 {
+                font-size: 28px !important;
+                margin-bottom: 10px !important;
+            }
+            
+            .subtitle {
+                font-size: 14px !important;
+                margin-bottom: 25px !important;
+            }
+            
+            h2 {
+                font-size: 20px !important;
+                margin: 30px 0 15px 0 !important;
+                padding-left: 12px !important;
+            }
+            
+            h3 {
+                font-size: 16px !important;
+                margin: 20px 0 10px 0 !important;
+            }
+            
+            /* Executive Summary */
+            div[style*="rgba(255,255,255,0.95)"] {
+                padding: 15px !important;
+            }
+            
+            div[style*="rgba(255,255,255,0.95)"] h3 {
+                font-size: 16px !important;
+            }
+            
+            div[style*="rgba(255,255,255,0.95)"] p {
+                font-size: 13px !important;
+            }
+            
+            div[style*="rgba(255,255,255,0.95)"] li {
+                font-size: 13px !important;
+            }
+            
+            /* 서비스 모델 도식 */
+            .service-model-title {
+                font-size: 14px !important;
+            }
+            
+            .compact-route {
+                padding: 12px !important;
+            }
+            
+            .route-header {
+                font-size: 13px !important;
+            }
+            
+            .compact-flow {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            
+            .flow-item {
+                font-size: 11px !important;
+                padding: 8px 12px !important;
+                margin-bottom: 3px !important;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg) !important;
+                margin: 5px 0 !important;
+            }
+            
+            /* Route A/B 세로 박스를 1컬럼으로 */
+            div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            
+            .vertical-route {
+                padding: 12px !important;
+            }
+            
+            .vertical-step {
+                font-size: 11px !important;
+                padding: 8px 12px !important;
+                min-width: 100px !important;
+            }
+            
+            .vertical-arrow {
+                font-size: 16px !important;
+            }
+            
+            /* 공통 정산 박스 */
+            .common-settlement {
+                padding: 12px !important;
+            }
+            
+            .settlement-flow {
+                flex-direction: column !important;
+                gap: 8px !important;
+            }
+            
+            .settlement-item {
+                font-size: 12px !important;
+                padding: 8px 15px !important;
+                white-space: normal !important;
+                text-align: center !important;
+            }
+            
+            .settlement-arrow {
+                transform: rotate(90deg) !important;
+                margin: 5px 0 !important;
+            }
+            
+            /* 핵심 메커니즘 박스 */
+            div[style*="background: rgba(255,255,255,0.08)"] {
+                padding: 12px !important;
+                font-size: 11px !important;
+            }
+            
+            /* Journey 플로우 */
+            .journey-flow {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            
+            .journey-step {
+                margin-bottom: 8px !important;
+            }
+            
+            .journey-step-title {
+                font-size: 13px !important;
+            }
+            
+            .journey-step-desc {
+                font-size: 11px !important;
+            }
+            
+            .journey-arrow {
+                transform: rotate(90deg) !important;
+                margin: 8px 0 !important;
+            }
+            
+            /* 비교 테이블 */
+            .comparison-table {
+                font-size: 10px !important;
+                display: block !important;
+                overflow-x: auto !important;
+            }
+            
+            .comparison-table thead {
+                display: none !important;
+            }
+            
+            .comparison-table tbody,
+            .comparison-table tr {
+                display: block !important;
+            }
+            
+            .comparison-table tr {
+                margin-bottom: 15px !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 8px !important;
+                padding: 10px !important;
+            }
+            
+            .comparison-table td {
+                display: block !important;
+                text-align: left !important;
+                padding: 8px !important;
+                border: none !important;
+            }
+            
+            .comparison-table td:before {
+                content: attr(class) ": ";
+                font-weight: 700;
+                display: block;
+                margin-bottom: 5px;
+            }
+            
+            .feature-col:before {
+                content: "구분: " !important;
+            }
+            
+            /* 문제점/해결/혜택 카드 */
+            .problem-card,
+            .solution-card,
+            .benefit-card {
+                margin-bottom: 15px !important;
+            }
+            
+            /* 슬라이드 패널 */
+            .slide-panel {
+                width: 100% !important;
+                padding: 20px 15px !important;
+                right: -100% !important;
+            }
+            
+            .slide-panel.active {
+                right: 0 !important;
+            }
+            
+            .slide-panel-title {
+                font-size: 20px !important;
+            }
+            
+            .arch-layer {
+                padding: 12px !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .arch-layer-title {
+                font-size: 14px !important;
+            }
+            
+            .mermaid svg {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+            
+            /* 기술 버튼 */
+            .tech-button {
+                top: 10px !important;
+                right: 10px !important;
+                padding: 8px 12px !important;
+                font-size: 11px !important;
+                z-index: 1001 !important;
+            }
+            
+            /* bullet list */
+            .bullet-list li {
+                font-size: 13px !important;
+                margin-bottom: 8px !important;
+            }
+        }
+        /* ===== 모바일 반응형 끝 ===== */
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 42px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 50px 0 25px 0;
+            color: #2d3748;
+            border-left: 6px solid #667eea;
+            padding-left: 20px;
+        }
+        
+        h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+            color: #4a5568;
+        }
+        
+        /* Overall Service Architecture */
+        .overall-architecture {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 35px;
+            margin: 35px 0;
+        }
+        
+        .arch-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        
+        .arch-diagram {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .arch-service {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        
+        .arch-service:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+        }
+        
+        .arch-service-num {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin: 0 auto 12px;
+            font-size: 18px;
+        }
+        
+        .arch-service-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #2d3748;
+        }
+        
+        .arch-service-desc {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+        
+        .arch-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        
+        .arch-highlight .arch-service-num {
+            background: white;
+            color: #667eea;
+        }
+        
+        .arch-highlight .arch-service-title,
+        .arch-highlight .arch-service-desc {
+            color: white;
+        }
+        
+        /* Vertical Route Styles */
+        .vertical-route {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .vertical-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .vertical-step {
+            background: rgba(255,255,255,0.15);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            text-align: center;
+            min-width: 150px;
+            line-height: 1.3;
+        }
+        
+        .vertical-arrow {
+            color: white;
+            font-size: 18px;
+            opacity: 0.7;
+            margin: 2px 0;
+        }
+        
+        /* Common Settlement Box */
+        .common-settlement {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,165,0,0.15));
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            border: 2px solid rgba(255,215,0,0.3);
+        }
+        
+        .settlement-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .settlement-item {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .settlement-arrow {
+            color: white;
+            font-size: 20px;
+            opacity: 0.9;
+            font-weight: 700;
+        }
+        
+        /* Compact Route Styles */
+        .compact-route {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .route-header {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: white;
+            opacity: 0.9;
+        }
+        
+        .compact-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .flow-item {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            white-space: nowrap;
+        }
+        
+        .flow-arrow {
+            color: white;
+            font-size: 18px;
+            opacity: 0.7;
+        }
+        
+        /* Service Model */
+        .service-model {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 15px;
+            margin: 35px 0;
+            color: white;
+        }
+        
+        .service-model-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+        
+        .model-grid {
+            display: grid;
+            grid-template-columns: 1fr 60px 1fr 60px 1fr;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .model-section-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 4px solid rgba(255,255,255,0.6);
+        }
+        
+        .model-box {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .model-box-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .model-box-content {
+            font-size: 13px;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+        
+        .arrow {
+            font-size: 35px;
+            text-align: center;
+            opacity: 0.8;
+        }
+        
+        .model-routes {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .routes-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .routes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .route-box {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        
+        .route-label {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .route-desc {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        
+        /* Problem Statement */
+        .problem-section {
+            background: #fff5f5;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #f56565;
+            margin: 35px 0;
+        }
+        
+        .problem-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .problem-list li {
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: white;
+            border-left: 4px solid #f56565;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .problem-list li strong {
+            color: #c53030;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .problem-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .problem-result strong {
+            color: #c53030;
+            font-size: 16px;
+        }
+        
+        /* User Journey */
+        .journey-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 35px 0;
+        }
+        
+        .journey-flow {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 25px 0;
+            overflow-x: auto;
+        }
+        
+        .journey-step {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            min-width: 180px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid #667eea;
+        }
+        
+        .journey-step-num {
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .journey-step-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        
+        .journey-step-desc {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+        
+        .journey-arrow {
+            font-size: 28px;
+            color: #667eea;
+            flex-shrink: 0;
+        }
+        
+        /* Bullet Points */
+        .bullet-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+        
+        .bullet-list li {
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .bullet-list li:hover {
+            background: #e7eaf0;
+            transform: translateX(5px);
+        }
+        
+        .bullet-list li strong {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        /* Stakeholders */
+        .stakeholder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+        
+        .stakeholder-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        
+        .stakeholder-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+        }
+        
+        .stakeholder-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .stakeholder-section {
+            margin: 12px 0;
+        }
+        
+        .stakeholder-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #718096;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stakeholder-list {
+            list-style: none;
+        }
+        
+        .stakeholder-list li {
+            padding: 6px 0;
+            color: #4a5568;
+            font-size: 14px;
+            padding-left: 18px;
+            position: relative;
+        }
+        
+        .stakeholder-list li:before {
+            content: "•";
+            position: absolute;
+            left: 5px;
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .comparison-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .comparison-table th {
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: left;
+        }
+        
+        .comparison-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            vertical-align: top;
+            line-height: 1.6;
+        }
+        
+        .comparison-table tbody tr:hover {
+            background: #fffbeb;
+        }
+        
+        .comparison-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table .feature-col {
+            font-weight: 600;
+            color: #2d3748;
+            width: 20%;
+        }
+        
+        .comparison-table ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+        
+        .comparison-table ul li {
+            margin: 6px 0;
+        }
+        
+        .comparison-table .blockchain-col {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+        }
+        
+        /* Legal Risk Table */
+        .legal-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .legal-table thead {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+            color: white;
+        }
+        
+        .legal-table th {
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: left;
+        }
+        
+        .legal-table td {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+            vertical-align: top;
+            line-height: 1.6;
+        }
+        
+        .legal-table tbody tr:hover {
+            background: #fff5f5;
+        }
+        
+        .legal-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .legal-table .risk-col {
+            width: 50%;
+            background: #fff5f5;
+        }
+        
+        .legal-table .solution-col {
+            width: 50%;
+            background: #f0fff4;
+        }
+        
+        .legal-table ul {
+            margin: 8px 0;
+            padding-left: 18px;
+        }
+        
+        .legal-table ul li {
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Smart 지역화폐</h1>
+        <div class="subtitle">블록체인 및 AI 기반 스마트 지방화폐 플랫폼</div>
+        
+        <!-- Overall Service Architecture -->
+        <h2>전체 서비스 모델 구성</h2>
+        <div class="overall-architecture">
+            <div class="arch-title">"우리 골목 살리기" 플랫폼 서비스 구성도</div>
+            <div class="arch-diagram">
+                <div class="arch-service">
+                    <div class="arch-service-num">1</div>
+                    <div class="arch-service-title">AI 경영 비서</div>
+                    <div class="arch-service-desc">
+                        현금흐름 예측, 시세 비교, 건강 스코어 등 소상공인을 위한 AI 기반 경영 지원
+                    </div>
+                </div>
+                
+                <div class="arch-service arch-highlight">
+                    <div class="arch-service-num">2</div>
+                    <div class="arch-service-title">Smart 지역화폐</div>
+                    <div class="arch-service-desc">
+                        공급망 검증 기반 지역화폐 교환 플랫폼 및 사용권역 확대를 통한 지역경제 활성화
+                    </div>
+                </div>
+                
+                <div class="arch-service">
+                    <div class="arch-service-num">3</div>
+                    <div class="arch-service-title">PBM 기반 지자체 정책자금 매칭</div>
+                    <div class="arch-service-desc">
+                        정책자금 AI 자동 매칭, 신청서 초안 자동 작성, PBM 방식의 발굴·집행·추적
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Service 2 Highlight -->
+        <!-- Executive Summary -->
+        <h2>Executive Summary</h2>
+        
+        <div style="background: rgba(255,255,255,0.95); padding: 25px; border-radius: 12px; margin-bottom: 30px; border: 2px solid rgba(0,0,0,0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <h3 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 15px;">현재 문제</h3>
+            <p style="line-height: 1.8; color: #2d3748; margin-bottom: 20px;">
+                전국 225개 지자체가 발행하는 "지역화폐"는 <strong>상호 호환이 불가능</strong>하고 정산에도 <strong>T+5~7일</strong>이 걸려 실제 유통액 역시 감소 추세입니다. 지역 간 경제 활동이 단절되어 소상공인의 실질적 현금흐름 개선 효과가 제한적입니다.
+            </p>
+            
+            <h3 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 15px;">제공 서비스</h3>
+            <p style="line-height: 1.8; color: #2d3748; margin-bottom: 20px;">
+                스마트컨트랙트 + <strong style="color: #d97706;">블록체인 공급망 데이터 기반</strong> 지역화폐 플랫폼으로, 소상공인 매출 발생 시 지역화폐를 <strong>1) 즉시 송금</strong>, <strong>2) 공급망 기반 광역 사용</strong>, <strong>3) 지역 간 교환</strong>을 지원합니다.
+            </p>
+            
+            <h3 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 15px;">플랫폼 구조</h3>
+            <ul style="margin-top: 10px; color: #2d3748; list-style: disc; padding-left: 25px; line-height: 1.8;">
+                <li style="margin-bottom: 10px;"><strong>컨소시엄 (주도):</strong> 블록체인 플랫폼 운영, 공급망 검증, 스마트컨트랙트 관리, 지자체/가맹점 온보딩</li>
+                <li style="margin-bottom: 10px;"><strong>은행 (보조):</strong> 즉시 정산/교환용 자금풀 custody만 담당 (금융 서비스 주체 아님)</li>
+                <li style="margin-bottom: 10px;"><strong>라이선스 이슈 없음:</strong> 은행이 자금만 제공, 정산권 매입 등 여신업무 수행하지 않음</li>
+            </ul>
+        </div>
+        
+        <h2>서비스 2: Smart 지역화폐 플랫폼</h2>
+        
+        <div class="service-model">
+            <div class="service-model-title">블록체인 기반 스마트 지역화폐 플랫폼</div>
+            
+            <!-- 기본 흐름 -->
+            <div class="compact-route" style="background: rgba(255,255,255,0.15);">
+                <div class="route-header" style="font-size: 18px;">기본: 블록체인 즉시 정산</div>
+                <div class="compact-flow">
+                    <span class="flow-item" style="background: rgba(255,255,255,0.25);">소상공인 매출 발생</span>
+                    <span class="flow-arrow">→</span>
+                    <span class="flow-item" style="background: rgba(255,255,255,0.25);">블록체인 검증</span>
+                    <span class="flow-arrow">→</span>
+                    <span class="flow-item" style="background: rgba(255,255,255,0.25);">지역화폐로 즉시 송금</span>
+                    <span class="flow-arrow">→</span>
+                    <span class="flow-item" style="background: rgba(255,255,255,0.25);">은행 자금풀 활용</span>
+                </div>
+                <div style="text-align: center; margin-top: 15px; font-size: 13px; opacity: 0.8;">
+                    ↓ 이후 2가지 Route 선택 가능
+                </div>
+            </div>
+            
+            <!-- Route A & B 세로 배치 -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                <!-- Route A -->
+                <div class="vertical-route">
+                    <div class="route-header">Route A: 타지역 사용</div>
+                    <div class="vertical-flow">
+                        <div class="vertical-step">A지역 소상공인</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">B지역 사용 신청</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">블록체인<br>공급망 검증</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">타지역 사용 승인</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">B지역에<br>A지역화폐 사용</div>
+                    </div>
+                </div>
+                
+                <!-- Route B -->
+                <div class="vertical-route">
+                    <div class="route-header">Route B: 지역화폐 교환</div>
+                    <div class="vertical-flow">
+                        <div class="vertical-step">A지역 소상공인</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">B지역 화폐로<br>교환 신청</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">블록체인 매칭<br>(AMM)</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">B지역 화폐로<br>즉시 교환</div>
+                        <div class="vertical-arrow">↓</div>
+                        <div class="vertical-step">B지역에서<br>B화폐 사용</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 공통 정산 박스 -->
+            <div class="common-settlement">
+                <div class="settlement-flow">
+                    <div class="settlement-item">지자체 예치금으로 사후 정산</div>
+                    <div class="settlement-arrow">→</div>
+                    <div class="settlement-item">블록체인 플랫폼 자동 청산</div>
+                    <div class="settlement-arrow">→</div>
+                    <div class="settlement-item">은행 수수료 수취</div>
+                </div>
+            </div>
+            
+            <!-- 핵심 메커니즘 -->
+            <div style="background: rgba(255,255,255,0.08); padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.2);">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: white;">💡 핵심: 즉시 정산/교환 자금풀</div>
+                <div style="font-size: 13px; line-height: 1.6; color: white; opacity: 0.9;">
+                    은행(신한은행 등)이 자금풀 제공 → 블록체인이 자동 검증 및 실행 → 지자체 예치금으로 사후 정산 → 은행 수수료 수취
+                </div>
+            </div>
+        </div>
+        
+        <!-- Problem Statement -->
+        <h2>해결하고자 하는 문제</h2>
+        
+        <div class="problem-section">
+            <h3>지방화폐 3대 문제점</h3>
+            <ul class="problem-list">
+                <li>
+                    <strong>1. 파편화</strong>
+                    전국 225개 지자체가 별도로 발행하여 상호 호환이 불가능하며, 특정 지역에서 충전한 잔액을 다른 지역에서 사용할 수 없음
+                </li>
+                <li>
+                    <strong>2. 사용처 제한</strong>
+                    지역 내 가맹점으로만 사용이 제한되어 관광객 불편, 타지역 진출 소상공인은 해당 지역화폐 수취 불가
+                </li>
+                <li>
+                    <strong>3. 일방향 흐름 및 유동성 부족</strong>
+                    충전 → 사용 → 소진의 일방향 구조, 조기 현금화 시 10% 수수료 부담, 소상공인 정산 대기 5~7일
+                </li>
+            </ul>
+            <div class="problem-result">
+                <strong>결과:</strong> 유통액 감소 추세 (2023년 14.8조원 → 2024년 12.1조원), 지자체 예산 낭비, 소상공인 부담 증가
+            </div>
+        </div>
+        
+        <!-- 이해관계자 -->
+        <h2>이해관계자</h2>
+        
+        <div class="stakeholder-grid">
+            <div class="stakeholder-card">
+                <div class="stakeholder-title">소상공인</div>
+                <div class="stakeholder-section">
+                    <div class="stakeholder-section-title">Pain Points</div>
+                    <ul class="stakeholder-list">
+                        <li>정산 지연으로 인한 현금흐름 부족 (5~7일 대기)</li>
+                        <li>여러 지역화폐 관리의 복잡성과 행정 부담</li>
+                        <li>타지역 진출 시 해당 지역화폐 수취 불가</li>
+                    </ul>
+                </div>
+                <div class="stakeholder-section">
+                    <div class="stakeholder-section-title">Needs</div>
+                    <ul class="stakeholder-list">
+                        <li>즉시 현금화 또는 타지역 화폐로 전환</li>
+                        <li>전국 어디서나 수취 가능한 단일 인터페이스</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="stakeholder-card">
+                <div class="stakeholder-title">지자체</div>
+                <div class="stakeholder-section">
+                    <div class="stakeholder-section-title">Pain Points</div>
+                    <ul class="stakeholder-list">
+                        <li>연간 수천억원 발행 비용 대비 실효성 측정 곤란</li>
+                        <li>타지역 유출 우려로 사용처 제한 → 편의성 저하</li>
+                        <li>실질적 지역경제 기여도 객관적 입증 어려움</li>
+                    </ul>
+                </div>
+                <div class="stakeholder-section">
+                    <div class="stakeholder-section-title">Needs</div>
+                    <ul class="stakeholder-list">
+                        <li>블록체인 기반 투명한 효과 측정 시스템</li>
+                        <li>타지역 사용 허용하되 실질 기여도는 보장</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="stakeholder-card">
+                <div class="stakeholder-title">공급자 (농협, 도매상)</div>
+                <div class="stakeholder-section">
+                    <div class="stakeholder-section-title">Pain Points</div>
+                    <ul class="stakeholder-list">
+                        <li>외상 거래로 인한 현금흐름 부족 (30일 후 수령)</li>
+                        <li>타지역 거래 시 지역화폐 수취 불가</li>
+                    </ul>
+                </div>
+                <div class="stakeholder-section">
+                    <div class="stakeholder-section-title">Needs</div>
+                    <ul class="stakeholder-list">
+                        <li>지역화폐 즉시 결제 옵션</li>
+                        <li>수취한 지역화폐의 즉시 교환 및 현금화</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 세부 서비스 내용 -->
+        <h2>세부 서비스 내용</h2>
+        
+        <!-- Route A -->
+        <h3>Route A: 타지역 사용 (공급망 기반)</h3>
+        
+        <div class="journey-section">
+            <div class="journey-flow">
+                <div class="journey-step">
+                    <div class="journey-step-num">1</div>
+                    <div class="journey-step-title">공급망 데이터</div>
+                    <div class="journey-step-desc">김천 B식당이 부산산 농산물을 월 800만원 구매 (53%)</div>
+                </div>
+                
+                <div class="journey-arrow">→</div>
+                
+                <div class="journey-step">
+                    <div class="journey-step-num">2</div>
+                    <div class="journey-step-title">타지역 사용 신청</div>
+                    <div class="journey-step-desc">부산 관광객이 김천 B식당에서 부산페이 10만원 결제 시도</div>
+                </div>
+                
+                <div class="journey-arrow">→</div>
+                
+                <div class="journey-step">
+                    <div class="journey-step-num">3</div>
+                    <div class="journey-step-title">블록체인 검증</div>
+                    <div class="journey-step-desc">공급망 조회, 부산 기여도 53% 자동 산정 → 기준 50% 충족</div>
+                </div>
+                
+                <div class="journey-arrow">→</div>
+                
+                <div class="journey-step">
+                    <div class="journey-step-num">4</div>
+                    <div class="journey-step-title">즉시 승인 및 정산</div>
+                    <div class="journey-step-desc">은행 자금풀에서 즉시 송금, 지자체 예치금으로 사후 정산</div>
+                </div>
+            </div>
+            
+            <ul class="bullet-list">
+                <li><strong>핵심 차별화:</strong> 블록체인에 기록된 공급망 데이터(농협→도매→가맹점)로 B지역 내 A지역 기여도를 객관적 산정</li>
+                <li><strong>온체인 검증:</strong> 전체 공급망 거래가 블록체인 기록, 위변조 불가능, 지자체 간 중립적 검증 실현</li>
+                <li><strong>중앙 DB 불가:</strong> 공급망 신뢰는 블록체인만 가능 (중앙 DB로는 지자체 간 합의 불가)</li>
+                <li><strong>관광객 편의:</strong> 타지역에서도 사용 가능, 잔액 소진 부담 없이 충전, 환급 수수료 제거</li>
+            </ul>
+        </div>
+        
+        <!-- Route B -->
+        <h3>Route B: 지역화폐 교환</h3>
+        
+        <div class="journey-section">
+            <div class="journey-flow">
+                <div class="journey-step">
+                    <div class="journey-step-num">1</div>
+                    <div class="journey-step-title">부산페이 매출</div>
+                    <div class="journey-step-desc">A식당이 부산페이로 1,000만원 매출 기록</div>
+                </div>
+                
+                <div class="journey-arrow">→</div>
+                
+                <div class="journey-step">
+                    <div class="journey-step-num">2</div>
+                    <div class="journey-step-title">타지역 화폐 교환</div>
+                    <div class="journey-step-desc">김천페이 950개로 즉시 교환 신청 (5% 할인)</div>
+                </div>
+                
+                <div class="journey-arrow">→</div>
+                
+                <div class="journey-step">
+                    <div class="journey-step-num">3</div>
+                    <div class="journey-step-title">블록체인 매칭</div>
+                    <div class="journey-step-desc">AMM 스마트컨트랙트가 최적 환율 계산, 은행 자금풀에서 즉시 교환</div>
+                </div>
+                
+                <div class="journey-arrow">→</div>
+                
+                <div class="journey-step">
+                    <div class="journey-step-num">4</div>
+                    <div class="journey-step-title">사후 정산</div>
+                    <div class="journey-step-desc">김천에서 즉시 사용, 지자체 예치금으로 사후 청산, 은행 수수료 수취</div>
+                </div>
+            </div>
+            
+            <ul class="bullet-list">
+                <li><strong>정산 대기 제거:</strong> 타지역 화폐로 즉시 교환하여 정산 지연 없이 현금화, 소상공인 현금흐름 개선</li>
+                <li><strong>지역 간 유동성 확보:</strong> 전국 어디서나 사용 가능한 지역화폐로 전환, 파편화 문제 해결</li>
+                <li><strong>AMM 자동 매칭:</strong> 스마트컨트랙트가 최적 환율 자동 계산하여 즉시 체결</li>
+                <li><strong>은행 자금풀:</strong> 신한은행 등이 자금풀 제공, 지자체 예치금으로 사후 정산, 수수료 수익 모델</li>
+            </ul>
+        </div>
+        
+        <!-- Why Blockchain -->
+        <h2>Why Blockchain</h2>
+        
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>일반 중앙 DB</th>
+                    <th>AI 역할</th>
+                    <th>블록체인 (스마트컨트랙트)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="feature-col">타지역 사용<br>(Route A)</td>
+                    <td>
+                        <ul>
+                            <li>부산시 DB와 김천시 DB 간 상호 연동 불가</li>
+                            <li>공급망 데이터 조작 가능</li>
+                            <li>지자체 간 합의 불가능 (신뢰 부재)</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>공급망 패턴 분석으로 기여도 산정</li>
+                            <li>가맹점별 최적 기준 비율 제안</li>
+                            <li>계절성 및 품목별 동적 한도 조정</li>
+                        </ul>
+                    </td>
+                    <td class="blockchain-col">
+                        <ul>
+                            <li><strong>온체인 공급망 기록</strong> (농협→도매→가맹점 전체)</li>
+                            <li>스마트컨트랙트 실시간 조회 및 기여도 자동 산정</li>
+                            <li><strong>중립적 검증</strong> (지자체 간 합의 실현)</li>
+                            <li>컨소시엄 플랫폼 주도, 은행은 자금풀 custody만</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="feature-col">지역화폐 교환<br>(Route B)</td>
+                    <td>
+                        <ul>
+                            <li><strong>은행이 중앙 DB 신뢰 불가</strong> → 자금 예치 거부</li>
+                            <li>정산일 수동 확인 및 분배로 시간 지연</li>
+                            <li>데이터 조작 가능성으로 투자자 확보 곤란</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>교환 수요 예측 및 최적 환율 제안</li>
+                            <li>자금풀 유동성 관리 자동화</li>
+                            <li>이상 거래 탐지 및 리스크 모니터링</li>
+                        </ul>
+                    </td>
+                    <td class="blockchain-col">
+                        <ul>
+                            <li><strong>블록체인 불변 원장</strong> → 은행 신뢰 확보</li>
+                            <li>정산권 ERC-20 토큰화로 위변조 불가능</li>
+                            <li>AMM 자동 스왑으로 즉시 체결 (1분 이내)</li>
+                            <li>컨소시엄이 플랫폼 운영, 은행은 자금만 제공</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="feature-col">투명성 및<br>신뢰</td>
+                    <td>
+                        <ul>
+                            <li>플랫폼 운영사가 데이터 임의 수정 가능</li>
+                            <li>지자체 간 검증 메커니즘 부재</li>
+                            <li>은행이 공급망 데이터 담보 인정 거부</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            <li>데이터 무결성 검증 및 이상 패턴 탐지</li>
+                            <li>신용평가 모델 학습으로 승인율 최적화</li>
+                            <li>지자체별 효과성 보고서 자동 생성</li>
+                        </ul>
+                    </td>
+                    <td class="blockchain-col">
+                        <ul>
+                            <li><strong>모든 거래가 불변 원장 기록</strong>, 사후 수정 불가</li>
+                            <li>모든 당사자가 동일 데이터 실시간 조회</li>
+                            <li><strong>공급망 데이터를 신용평가 담보로 인정 가능</strong></li>
+                            <li>은행의 신뢰 확보로 자금풀 제공 가능</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- Legal Risk 검토 -->
+        <h2>Legal Risk 검토</h2>
+        
+        <table class="legal-table">
+            <thead>
+                <tr>
+                    <th>리스크</th>
+                    <th>해결 방안</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="risk-col">
+                        <strong>1. 지역화폐 광역 연계 시 여신금융업 해당 가능성</strong><br><br>
+                        컨소시엄이 직접 유동성 풀(LP)에 자금을 제공하는 경우, 정산 예정액을 할인 매입하는 팩토링 행위로 간주되어 여신전문금융업 라이선스가 필요할 수 있음. 또한 정산권 토큰이 자본시장법상 증권에 해당할 경우 증권 발행 인가 문제 발생 가능.
+                    </td>
+                    <td class="solution-col">
+                        <ul>
+                            <li>은행 또는 보증사가 LP 자금 직접 제공, 컨소시엄은 기술 플랫폼만 운영</li>
+                            <li>정산권 토큰을 소액(5,000만원 이하) 사모 발행(49명 이하)으로 구성하여 인가 면제</li>
+                            <li>"지급청구권"으로 해석하여 전자금융업법 적용 (법률 자문 필수)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="risk-col">
+                        <strong>2. 지방화폐 조례 위반 (타지역 사용 제한)</strong><br><br>
+                        대부분 지자체의 지방화폐 조례는 "해당 지역 내 가맹점에서만 사용 가능"으로 명시되어 있어, 김천에서 부산페이를 사용하는 것이 조례 위반에 해당할 수 있음. 또한 타지역 사용 허용 시 "지역 내 소비 촉진" 취지 훼손 비판 가능.
+                    </td>
+                    <td class="solution-col">
+                        <ul>
+                            <li>조례 개정으로 "해당 지역 경제에 실질적으로 기여하는 가맹점"으로 정의 확대</li>
+                            <li>외지인 전용 "부산페이 플러스" 등 별도 상품 신규 발행</li>
+                            <li>블록체인 공급망 데이터로 실질 기여 효과 투명하게 증명</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="risk-col">
+                        <strong>3. 공급망 데이터의 개인정보 보호 문제</strong><br><br>
+                        가맹점의 공급망 구매 내역은 영업 비밀에 해당할 수 있으며, 블록체인 공개 시 개인정보보호법 및 정보통신망법 위반 가능성. 특히 소규모 가맹점의 경우 구매 데이터만으로도 사업자 특정 가능.
+                    </td>
+                    <td class="solution-col">
+                        <ul>
+                            <li>금융 혜택 받고자 하는 가맹점에 한해 공급망 데이터 공개 동의</li>
+                            <li>Hyperledger Fabric Private Data Collection으로 관련 당사자만 조회</li>
+                            <li>블록체인에는 가맹점 ID와 금액만 기록, 상세 품목은 익명화</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="risk-col">
+                        <strong>4. 공급망 데이터를 담보로 인정받을 수 있는가</strong><br><br>
+                        전통적으로 은행 대출 담보는 부동산, 예금, 유가증권 등으로 한정되어 있으며, 공급망 구매 이력을 담보로 인정하는 법적 선례가 부족함. 은행법상 "비전통 담보"에 대한 명확한 기준 부재.
+                    </td>
+                    <td class="solution-col">
+                        <ul>
+                            <li>공급망 데이터를 "담보" 아닌 "신용 보강 수단"으로 포지셔닝하여 금리 우대 근거</li>
+                            <li>보증사가 공급망 데이터 근거로 보증서 발급, 은행은 보증서를 담보로 대출</li>
+                            <li>금융위원회와 사전 협의하여 SCF 카테고리 내 블록체인 신용평가 모델 인정</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Tech Button -->
+    <button class="tech-button" onclick="openTechPanel()">
+        📋 스마트컨트랙트 코드 플로우
+    </button>
+    
+    <!-- Overlay -->
+    <div class="overlay" id="overlay" onclick="closeTechPanel()"></div>
+    
+    <!-- Slide Panel -->
+    <div class="slide-panel" id="techPanel">
+        <button class="slide-panel-close" onclick="closeTechPanel()">×</button>
+        
+        <div class="slide-panel-title">Smart 지역화폐 코드 플로우</div>
+        
+        <!-- Route A Flow -->
+        <div class="arch-layer">
+            <div class="arch-layer-title">Route A: 타지역 사용 (공급망 기반)</div>
+            <div class="mermaid">
+graph TD
+    A[부산 관광객 결제 시도] --> B[SupplyChainVerification.sol]
+    B --> C{공급망 데이터 조회<br/>부산 기여도 53%}
+    C -->|53% >= 50%| D[기준 충족 ✓]
+    C -->|미충족| E[거부 ✗]
+    D --> F[InstantSettlement.sol]
+    F --> G[은행 자금풀 확인]
+    G --> H[김천 가맹점 즉시 송금]
+    H --> I[settlementQueue.push]
+    I --> J[지자체 예치금 사후 정산]
+            </div>
+        </div>
+        
+        <!-- Route B Flow -->
+        <div class="arch-layer">
+            <div class="arch-layer-title">Route B: 지역화폐 교환</div>
+            <div class="mermaid">
+graph TD
+    A[부산 소상공인 교환 신청] --> B[CurrencySwap.sol]
+    B --> C[AMM 환율 계산<br/>부산 1000 -> 김천 950]
+    C --> D[BusanPay.burn<br/>1000개 소각]
+    D --> E[GimcheonPay.mint<br/>950개 발행]
+    E --> F[bankPool.executeSwap]
+    F --> G[소상공인에게 즉시 지급]
+    G --> H[settlementQueue.push]
+    H --> I[정산일 자동 청산]
+    I --> J[신한은행 수수료 50만원]
+            </div>
+        </div>
+        
+        <!-- 사후 정산 Flow -->
+        <div class="arch-layer">
+            <div class="arch-layer-title">공통: 사후 정산 자동 청산</div>
+            <div class="mermaid">
+graph TD
+    A[정산일 도래] --> B[AutoSettlement.executeSettlement]
+    B --> C[settlementQueue.getDue]
+    C --> D{정산 대상 존재?}
+    D -->|Yes| E[for loop 순회]
+    D -->|No| F[종료]
+    E --> G[govDeposit 확인]
+    G --> H[지자체 예치금 -> 은행]
+    H --> I[수수료 계산 5%]
+    I --> J[bankPool.collectFee]
+    J --> K[settlementQueue.markCompleted]
+    K --> L[emit SettlementCompleted]
+            </div>
+        </div>
+        
+        <!-- 전체 아키텍처 -->
+        <div class="arch-layer">
+            <div class="arch-layer-title">전체 시스템 아키텍처</div>
+            <div class="mermaid">
+graph TB
+    subgraph Frontend
+        A[Cashnote App<br/>KCD]
+        B[관리자 Dashboard]
+    end
+    
+    subgraph Blockchain["Besu Network (Block Odyssey)"]
+        C1[ERC-20 Token]
+        C2[InstantSettlement]
+        C3[CurrencySwap]
+        C4[SupplyChainVerification]
+        C5[AutoSettlement]
+    end
+    
+    subgraph Offchain
+        D[은행 자금풀<br/>신한은행]
+        E[지자체 예치금]
+        F[AI 신용평가<br/>WQ]
+    end
+    
+    A --> C1
+    A --> C2
+    A --> C3
+    B --> C5
+    
+    C2 --> D
+    C3 --> D
+    C4 --> F
+    C5 --> E
+    D --> E
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openTechPanel() {
+            document.getElementById('techPanel').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            // Mermaid 다이어그램 렌더링
+            setTimeout(() => {
+                mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+            }, 100);
+        }
+        
+        function closeTechPanel() {
+            document.getElementById('techPanel').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // ESC 키로 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeTechPanel();
+            }
+        });
+    </script>
+</body>
+</html>
